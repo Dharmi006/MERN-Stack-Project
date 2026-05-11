@@ -1,0 +1,17 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #f0eff5;
+  font-family: sans-serif;
+}
+
+.MainLayout {
+  display: flex;
+  align-items: flex-start;
+  gap: 32px;
+  padding: 40px 32px;
+}
