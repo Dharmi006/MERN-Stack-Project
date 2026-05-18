@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useEffect } from "react";
 import NoteCard from "./Notecard";
 import "../NoteContainer.css";
-
 export default function NoteContainer({cards,deleteNote,editNote}){
     return(
         <div className="NoteSection">

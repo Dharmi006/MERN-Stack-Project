@@ -10,13 +10,14 @@ export default function AddNote({addNote,titleInput,setTitleInput,contentInput,s
                     name="title"
                     value={titleInput}
                     onChange={(e) => setTitleInput(e.target.value)}
+                    required
                 />
                <label htmlFor="content">Content</label>
                <textarea 
                 placeholder="write your note" 
                 name="content"
                 value={contentInput}
-                onChange={(e) => setContentInput(e.target.value)}></textarea>
+                onChange={(e) => setContentInput(e.target.value)} required></textarea>
                {editId ? (
                     <button type="button" onClick={() => editNoteSave()}>Update Note</button>
                     ) : (
