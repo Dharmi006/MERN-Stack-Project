@@ -21,3 +21,22 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 20px;
 }
+@media (max-width: 1024px) {
+  .NoteContainer {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .NoteSection {
+    padding: 24px 16px;
+  }
+
+  .NoteSection h2 {
+    font-size: 1.5rem;
+  }
+
+  .NoteContainer {
+    grid-template-columns: 1fr;
+  }
+}

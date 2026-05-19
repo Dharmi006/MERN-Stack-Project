@@ -82,3 +82,17 @@
   box-shadow: 0 4px 16px rgba(91, 79, 207, 0.35);
   transform: translateY(-1px);
 }
+@media (max-width: 1024px) {
+  .Form {
+    width: 100%;
+    margin-top: 0;
+    position: static;
+  }
+}
+
+@media (max-width: 600px) {
+  .Form {
+    padding: 24px 18px;
+    border-radius: 14px;
+  }
+}

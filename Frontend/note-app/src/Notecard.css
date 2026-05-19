@@ -79,3 +79,13 @@
   color: #e53e3e;
   background: rgba(229, 62, 62, 0.1);
 }
+
+/* (all your existing styles unchanged) */
+
+/* Responsive */
+@media (max-width: 600px) {
+  .Card {
+    padding: 20px 16px 18px;
+    min-height: 160px;
+  }
+}
