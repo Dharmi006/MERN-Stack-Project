@@ -1,91 +1,183 @@
-import { useState,useEffect } from 'react'
+import { useState, useEffect } from "react";
 import Navbar from "./component/Navbar";
-import "./App.css"
-import AddNote from './component/AddNote';
-import NoteContainer from './component/NoteContainer'
+import "./App.css";
+import AddNote from "./component/AddNote";
+import NoteContainer from "./component/NoteContainer";
 
 function App() {
-  const [cards ,setCards] = useState([]);
-    const [titleInput,setTitleInput] = useState("");
-    const [contentInput,setContentInput] = useState("");
-    const[editId,setEditId] = useState(null);
-    const [searchInput, setSearchInput] = useState("");
-    const filteredCards = cards.filter((note) =>
+  const [cards, setCards] = useState([]);
+  const [titleInput, setTitleInput] = useState("");
+  const [contentInput, setContentInput] = useState("");
+  const [editId, setEditId] = useState(null);
+  const [searchInput, setSearchInput] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  const filteredCards = cards.filter((note) =>
     note.title.toLowerCase().includes(searchInput.toLowerCase())
-    );
+  );
 
-    useEffect(()=>{
-        fetch("http://localhost:8080/notes")
-        .then((res)=> res.json())
-        .then((data)=>{  
-            setCards(data);
-        })
-        .catch((err)=>{
-            console.log(err);
-        });
-    },[]);
+  // Fetch Notes
+  useEffect(() => {
+    const fetchNotes = async () => {
+      try {
+        const res = await fetch(
+          "https://mern-notes-api-ohev.onrender.com/notes"
+        );
 
-    //delete note
-    const deleteNote = async(id) =>{
-         await fetch(`http://localhost:8080/notes/${id}`,{
-            method:"DELETE"
-        });
-        setCards((prevNotes) =>
-            prevNotes.filter((note)=>note._id !== id)
-        );  
+        if (!res.ok) {
+          throw new Error("Failed to fetch notes");
+        }
+
+        const data = await res.json();
+        setCards(data);
+      } catch (err) {
+        console.log(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNotes();
+  }, []);
+
+  // Delete Note
+  const deleteNote = async (id) => {
+    try {
+      const res = await fetch(
+        `https://mern-notes-api-ohev.onrender.com/notes/${id}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error("Failed to delete note");
+      }
+
+      setCards((prevNotes) =>
+        prevNotes.filter((note) => note._id !== id)
+      );
+
+    } catch (err) {
+      console.log(err);
     }
-   // add note
-    const addNote = async() => {
-        await fetch("http://localhost:8080/notes",{
-            method:"POST",
-            headers:{
-                "content-type":"application/json"
-            },
-            body: JSON.stringify({title: titleInput ,content:contentInput}),
-         })
-       .then((res) => res.json())
-       .then((newNote) => {
-        setCards((prevNotes) => [...prevNotes, newNote]);
-        setTitleInput("");
-        setContentInput("");
-       })
-      .catch((err) => console.log(err));
-     }
+  };
 
-     //edit note
-     const editNote = (id, title, content) => {
-     setEditId(id);
-     setTitleInput(title);
-     setContentInput(content);
+  // Add Note
+  const addNote = async () => {
+
+    // Prevent empty note
+    if (!titleInput.trim() || !contentInput.trim()) {
+      alert("Please fill all fields");
+      return;
     }
-     const editNoteSave = async () => {
-     await fetch(`http://localhost:8080/notes/${editId}`, {
-     method: "PUT",
-     headers: { "content-type": "application/json" },
-     body: JSON.stringify({ title: titleInput, content: contentInput }),
-    })
-  .then((res) => res.json())
-  .then((updated) => {
-    setCards((prev) => prev.map((n) => n._id === editId ? updated : n));
-    setEditId(null);
-    setTitleInput("");
-    setContentInput("");
-  })
-  .catch((err) => console.log(err));
- }
+
+    try {
+      const res = await fetch(
+        "https://mern-notes-api-ohev.onrender.com/notes",
+        {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            title: titleInput,
+            content: contentInput,
+          }),
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error("Failed to add note");
+      }
+
+      const newNote = await res.json();
+
+      setCards((prevNotes) => [...prevNotes, newNote]);
+
+      setTitleInput("");
+      setContentInput("");
+
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  // Edit Note
+  const editNote = (id, title, content) => {
+    setEditId(id);
+    setTitleInput(title);
+    setContentInput(content);
+  };
+
+  // Save Edited Note
+  const editNoteSave = async () => {
+    try {
+      const res = await fetch(
+        `https://mern-notes-api-ohev.onrender.com/notes/${editId}`,
+        {
+          method: "PUT",
+          headers: {
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            title: titleInput,
+            content: contentInput,
+          }),
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error("Failed to update note");
+      }
+
+      const updated = await res.json();
+
+      setCards((prev) =>
+        prev.map((n) => (n._id === editId ? updated : n))
+      );
+
+      setEditId(null);
+      setTitleInput("");
+      setContentInput("");
+
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  if (loading) {
+    return <h2>Loading...</h2>;
+  }
+
   return (
     <>
-      <Navbar searchInput={searchInput} setSearchInput={setSearchInput} />
+      <Navbar
+        searchInput={searchInput}
+        setSearchInput={setSearchInput}
+      />
+
       <div className="MainLayout">
-         <NoteContainer cards={filteredCards} deleteNote={deleteNote}  editNote={editNote} />
-         <AddNote titleInput={titleInput}
+
+        <NoteContainer
+          cards={filteredCards}
+          deleteNote={deleteNote}
+          editNote={editNote}
+        />
+
+        <AddNote
+          titleInput={titleInput}
           setTitleInput={setTitleInput}
           contentInput={contentInput}
           setContentInput={setContentInput}
           addNote={addNote}
-          editId={editId} editNoteSave={editNoteSave} />
+          editId={editId}
+          editNoteSave={editNoteSave}
+        />
+
       </div>
-      </>
+    </>
   );
 }
+
 export default App;
