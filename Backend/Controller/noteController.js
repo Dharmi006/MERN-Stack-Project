@@ -1,29 +1,57 @@
 const Notes = require("../models/note");
 
-exports.getNotes = async (req,res)=>{
-    const notes =  await Notes.find();
+exports.getNotes = async (req, res) => {
+  try {
+    const notes = await Notes.find();
     res.json(notes);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: err.message });
+  }
 };
-exports.addNotes = async(req,res)=>{
-    let {title,content} = req.body;
+exports.addNotes = async (req, res) => {
+  try {
+    let { title, content } = req.body;
 
-    const newNote =new Notes({
-        title:title,
-        content:content,
+    const newNote = new Notes({
+      title,
+      content,
     });
-    await newNote.save();
-     res.json(newNote);
-}
 
-exports.deleteNote = async(req,res)=>{
+    await newNote.save();
+    res.json(newNote);
+
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.deleteNote = async (req, res) => {
+  try {
     let deleteNote = await Notes.findByIdAndDelete(req.params.id);
-    console.log(deleteNote);
-    res.json({message:"deleted"});
-}
-exports.editNote = async(req,res)=>{
-    let{title,content} = req.body;
+    res.json({ message: "deleted" });
+
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: err.message });
+  }
+};
+exports.editNote = async (req, res) => {
+  try {
+    let { title, content } = req.body;
     let editId = req.params.editId;
-    let updatedData =  await Notes.findByIdAndUpdate(editId,{title:title,content:content},{new:true});
-    console.log(updatedData);
+
+    let updatedData = await Notes.findByIdAndUpdate(
+      editId,
+      { title, content },
+      { new: true }
+    );
+
     res.json(updatedData);
-}
+
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: err.message });
+  }
+};
