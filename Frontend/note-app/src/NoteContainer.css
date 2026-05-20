@@ -1,26 +1,27 @@
 .NoteSection {
   flex: 1;
-  padding: 40px 32px;
+  padding: 28px 24px;
 }
 
 .NoteSection h2 {
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: #1a1a2e;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .NoteSection .subtitle {
-  font-size: 0.95rem;
+  font-size: 0.82rem;
   color: #6b7280;
-  margin-bottom: 28px;
+  margin-bottom: 20px;
 }
 
 .NoteContainer {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
+  gap: 16px;
 }
+
 @media (max-width: 1024px) {
   .NoteContainer {
     grid-template-columns: repeat(2, 1fr);
@@ -29,11 +30,11 @@
 
 @media (max-width: 600px) {
   .NoteSection {
-    padding: 24px 16px;
+    padding: 20px 14px;
   }
 
   .NoteSection h2 {
-    font-size: 1.5rem;
+    font-size: 1.2rem;
   }
 
   .NoteContainer {
