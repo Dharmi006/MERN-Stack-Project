@@ -2,7 +2,7 @@ const Notes = require("../models/note");
 
 exports.getNotes = async (req, res) => {
   try {
-    const notes = await Notes.find();
+    const notes = await Notes.find({user:req.user.id,});
     res.json(notes);
   } catch (err) {
     console.log(err);
@@ -16,6 +16,7 @@ exports.addNotes = async (req, res) => {
     const newNote = new Notes({
       title,
       content,
+      user:req.user.id,
     });
 
     await newNote.save();

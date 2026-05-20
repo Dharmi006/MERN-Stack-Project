@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import Login from "./component/Login";
 import Navbar from "./component/Navbar";
 import "./App.css";
 import AddNote from "./component/AddNote";
@@ -12,22 +13,33 @@ function App() {
   const [searchInput, setSearchInput] = useState("");
   const [loading, setLoading] = useState(true);
 
-  const filteredCards = cards.filter((note) =>
-    note.title.toLowerCase().includes(searchInput.toLowerCase())
-  );
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
+  const [authMode, setAuthMode] = useState("login");
 
-  // Fetch Notes
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    setIsLoggedIn(!!token);
+  }, []);
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      const timer = setTimeout(() => {
+        setShowLogin(true);
+      }, 2000);
+      return () => clearTimeout(timer);
+    } else {
+      setShowLogin(false);
+    }
+  }, [isLoggedIn]);
+
   useEffect(() => {
     const fetchNotes = async () => {
       try {
-        const res = await fetch(
-          "https://mern-notes-api-ohev.onrender.com/notes"
-        );
-
-        if (!res.ok) {
-          throw new Error("Failed to fetch notes");
-        }
-
+        const token = localStorage.getItem("token");
+        const res = await fetch("https://mern-notes-api-ohev.onrender.com/notes", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         const data = await res.json();
         setCards(data);
       } catch (err) {
@@ -37,134 +49,114 @@ function App() {
       }
     };
 
-    fetchNotes();
-  }, []);
+    if (isLoggedIn) {
+      fetchNotes();
+    } else {
+      setLoading(false);
+      setCards([]);
+    }
+  }, [isLoggedIn]);
 
-  // Delete Note
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setIsLoggedIn(false);
+    setCards([]);
+    setShowLogin(true);
+  };
+
+  const filteredCards = cards.filter((note) =>
+    (note.title || "").toLowerCase().includes(searchInput.toLowerCase())
+  );
+
   const deleteNote = async (id) => {
-    try {
-      const res = await fetch(
-        `https://mern-notes-api-ohev.onrender.com/notes/${id}`,
-        {
-          method: "DELETE",
-        }
-      );
-
-      if (!res.ok) {
-        throw new Error("Failed to delete note");
-      }
-
-      setCards((prevNotes) =>
-        prevNotes.filter((note) => note._id !== id)
-      );
-
-    } catch (err) {
-      console.log(err);
-    }
+    const token = localStorage.getItem("token");
+    await fetch(`https://mern-notes-api-ohev.onrender.com/notes/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setCards((prev) => prev.filter((note) => note._id !== id));
   };
 
-  // Add Note
   const addNote = async () => {
-
-    // Prevent empty note
-    if (!titleInput.trim() || !contentInput.trim()) {
-      alert("Please fill all fields");
-      return;
-    }
-
-    try {
-      const res = await fetch(
-        "https://mern-notes-api-ohev.onrender.com/notes",
-        {
-          method: "POST",
-          headers: {
-            "content-type": "application/json",
-          },
-          body: JSON.stringify({
-            title: titleInput,
-            content: contentInput,
-          }),
-        }
-      );
-
-      if (!res.ok) {
-        throw new Error("Failed to add note");
-      }
-
-      const newNote = await res.json();
-
-      setCards((prevNotes) => [...prevNotes, newNote]);
-
-      setTitleInput("");
-      setContentInput("");
-
-    } catch (err) {
-      console.log(err);
-    }
+    const token = localStorage.getItem("token");
+    const res = await fetch("https://mern-notes-api-ohev.onrender.com/notes", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ title: titleInput, content: contentInput }),
+    });
+    const newNote = await res.json();
+    setCards((prev) => [...prev, newNote]);
+    setTitleInput("");
+    setContentInput("");
   };
 
-  // Edit Note
   const editNote = (id, title, content) => {
     setEditId(id);
     setTitleInput(title);
     setContentInput(content);
   };
 
-  // Save Edited Note
   const editNoteSave = async () => {
-    try {
-      const res = await fetch(
-        `https://mern-notes-api-ohev.onrender.com/notes/${editId}`,
-        {
-          method: "PUT",
-          headers: {
-            "content-type": "application/json",
-          },
-          body: JSON.stringify({
-            title: titleInput,
-            content: contentInput,
-          }),
-        }
-      );
-
-      if (!res.ok) {
-        throw new Error("Failed to update note");
-      }
-
-      const updated = await res.json();
-
-      setCards((prev) =>
-        prev.map((n) => (n._id === editId ? updated : n))
-      );
-
-      setEditId(null);
-      setTitleInput("");
-      setContentInput("");
-
-    } catch (err) {
-      console.log(err);
-    }
+    if (!editId) return;
+    const token = localStorage.getItem("token");
+    const res = await fetch(`https://mern-notes-api-ohev.onrender.com/notes/${editId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ title: titleInput, content: contentInput }),
+    });
+    const updated = await res.json();
+    setCards((prev) => prev.map((n) => (n._id === editId ? updated : n)));
+    setEditId(null);
+    setTitleInput("");
+    setContentInput("");
   };
 
   if (loading) {
     return <h2>Loading...</h2>;
   }
 
+  // ✅ FIX: authMode and setAuthMode now passed here too
+  if (!isLoggedIn) {
+    return (
+      <>
+        <Navbar
+          isLoggedIn={isLoggedIn}
+          setShowLogin={setShowLogin}
+          handleLogout={handleLogout}
+        />
+        {showLogin && (
+          <Login
+            setIsLoggedIn={setIsLoggedIn}
+            setShowLogin={setShowLogin}
+            authMode={authMode}
+            setAuthMode={setAuthMode}
+          />
+        )}
+      </>
+    );
+  }
+
   return (
     <>
       <Navbar
+        isLoggedIn={isLoggedIn}
+        setShowLogin={setShowLogin}
+        handleLogout={handleLogout}
         searchInput={searchInput}
         setSearchInput={setSearchInput}
       />
-
       <div className="MainLayout">
-
         <NoteContainer
           cards={filteredCards}
           deleteNote={deleteNote}
           editNote={editNote}
         />
-
         <AddNote
           titleInput={titleInput}
           setTitleInput={setTitleInput}
@@ -174,8 +166,15 @@ function App() {
           editId={editId}
           editNoteSave={editNoteSave}
         />
-
       </div>
+      {showLogin && (
+        <Login
+          setIsLoggedIn={setIsLoggedIn}
+          setShowLogin={setShowLogin}
+          authMode={authMode}
+          setAuthMode={setAuthMode}
+        />
+      )}
     </>
   );
 }
